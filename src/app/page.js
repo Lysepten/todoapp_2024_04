@@ -2,23 +2,26 @@
 
 import * as React from 'react';
 import { ThemeProvider } from '@mui/material/styles';
-import { Button, AppBar, Toolbar } from '@mui/material';
-import theme from './theme';
+import { Button, AppBar, Toolbar, CssBaseline, TextField, Chip } from '@mui/material';
 import { FaBars } from 'react-icons/fa';
+import theme from './theme';
+import dateToStr from './dateUtil';
 
 const useTodoStatus = () => {
+  console.log('실행 1');
+
   const [todos, setTodos] = React.useState([]);
   const lastTodoIdRef = React.useRef(0);
 
-  const addTodo = (newTitle) => {
+  const addTodo = (newContent) => {
     const id = ++lastTodoIdRef.current;
 
     const newTodo = {
       id,
-      title: newTitle,
+      content: newContent,
       regDate: dateToStr(new Date()),
     };
-    setTodos([...todos, newTodo]);
+    setTodos((todos) => [...todos, newTodo]);
   };
 
   const removeTodo = (id) => {
@@ -26,8 +29,8 @@ const useTodoStatus = () => {
     setTodos(newTodos);
   };
 
-  const modifyTodo = (id, title) => {
-    const newTodos = todos.map((todo) => (todo.id != id ? todo : { ...todo, title }));
+  const modifyTodo = (id, content) => {
+    const newTodos = todos.map((todo) => (todo.id != id ? todo : { ...todo, content }));
     setTodos(newTodos);
   };
 
@@ -145,76 +148,86 @@ const TodoList = ({ todoStatus }) => {
   );
 };
 
-export default function App() {
-  const todoState = useTodoStatus(); // 리액트 커스텀 훅
+let AppCallCount = 0;
+
+const App = () => {
+  AppCallCount++;
+  console.log(`AppCallCount : ${AppCallCount}`);
+
+  const todosState = useTodoStatus(); // 리액트 커스텀 훅
+
+  React.useEffect(() => {
+    todosState.addTodo('스쿼트');
+    // todosState.addTodo('벤치');
+    // todosState.addTodo('데드');
+  }, []);
 
   const onSubmit = (e) => {
     e.preventDefault();
 
     const form = e.currentTarget;
 
-    form.title.value = form.title.value.trim();
+    form.content.value = form.content.value.trim();
 
-    if (form.title.value.length == 0) {
+    if (form.content.value.length == 0) {
       alert('할 일 써');
-      form.title.focus();
+      form.content.focus();
       return;
     }
 
-    todoState.addTodo(form.title.value);
-    form.title.value = '';
-    form.title.focus();
+    todosState.addTodo(form.content.value);
+    form.content.value = '';
+    form.content.focus();
   };
 
   return (
     <>
-      <ThemeProvider theme={theme}>
-        <AppBar position="fixed">
-          <Toolbar>
-            <div className="tw-flex-1">
-              <FaBars onClick={() => setOpen(true)} className="tw-cursor-pointer" />
-            </div>
-            <div className="logo-box">
-              <a href="/" className="tw-font-bold">
-                NOTE!
-              </a>
-            </div>
-            <div className="tw-flex-1 tw-flex tw-justify-end">
-              <a href="/write">글쓰기</a>
-            </div>
-          </Toolbar>
-        </AppBar>
-        <Toolbar />
-        <form onSubmit={onSubmit}>
-          <input type="text" name="title" autoComplete="off" placeholder="할 일 입력해" />
-          <button type="submit">추가</button>
-          <button type="reset">취소</button>
-        </form>
-        {todoState.todos.length}
-      </ThemeProvider>
+      <AppBar position="fixed">
+        <Toolbar>
+          <div className="tw-flex-1">
+            <FaBars onClick={() => setOpen(true)} className="tw-cursor-pointer" />
+          </div>
+          <div className="logo-box">
+            <a href="/" className="tw-font-bold">
+              TODO!
+            </a>
+          </div>
+          <div className="tw-flex-1 tw-flex tw-justify-end">
+            <a href="/write">글쓰기</a>
+          </div>
+        </Toolbar>
+      </AppBar>
+      <Toolbar />
+      <form className="tw-flex tw-flex-col tw-p-4 tw-gap-2" onSubmit={onSubmit}>
+        <TextField name="content" autoComplete="off" label="할 일을 입력해" variant="outlined" />
+        <Button className="tw-font-bold" variant="contained" type="submit">
+          추가
+        </Button>
+      </form>
+      할 일 갯수 : {todosState.todos.length}
+      <nav>
+        <ul>
+          {todosState.todos.map((todo) => (
+            <li key={todo.id}>
+              <div className="tw-flex tw-flex-col tw-gap-2 tw-mt-[30px]">
+                <Chip label={`번호 : ${todo.id}`} variant="outlined"></Chip>
+                <Chip label={`날짜 : ${todo.regDate}`} variant="outlined"></Chip>
+                <Chip label={`할 일 : ${todo.content}`} variant="outlined" color="primary"></Chip>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </nav>
     </>
   );
-}
+};
 
-// 유틸리티
-
-// 날짜 객체 입력받아서 문장(yyyy-mm-dd hh:mm:ss)으로 반환한다.
-function dateToStr(d) {
-  const pad = (n) => {
-    return n < 10 ? '0' + n : n;
-  };
-
+export default function themeApp() {
+  console.log('실행 2');
   return (
-    d.getFullYear() +
-    '-' +
-    pad(d.getMonth() + 1) +
-    '-' +
-    pad(d.getDate()) +
-    ' ' +
-    pad(d.getHours()) +
-    ':' +
-    pad(d.getMinutes()) +
-    ':' +
-    pad(d.getSeconds())
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <App />
+    </ThemeProvider>
   );
 }
