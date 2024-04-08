@@ -33,13 +33,22 @@ const todosAtom = atom({
   default: [],
 });
 
+const lastTodoIdAtom = atom({
+  key: 'app/lastTodoIdAtom',
+  default: 0,
+});
+
 function useTodosStatus() {
   const [todos, setTodos] = useRecoilState(todosAtom);
   // const [todos, setTodos] = React.useState([]);
-  const lastTodoIdRef = React.useRef(0);
+  const [lastTodoId, setLastTodoId] = useRecoilState(lastTodoIdAtom);
+  const lastTodoIdRef = React.useRef(lastTodoId);
+
+  lastTodoIdRef.current = lastTodoId;
 
   const addTodo = (newContent) => {
     const id = ++lastTodoIdRef.current;
+    setLastTodoId(id);
 
     const newTodo = {
       id,
@@ -104,7 +113,9 @@ function useTodosStatus() {
   };
 }
 
-const NewTodoForm = ({ todosStatus, noticeSnackbarStatus }) => {
+const NewTodoForm = ({ noticeSnackbarStatus }) => {
+  const todosStatus = useTodosStatus();
+
   const onSubmit = (e) => {
     e.preventDefault();
 
@@ -431,7 +442,7 @@ function App() {
       </AppBar>
       <Toolbar />
       <NoticeSnackbar status={noticeSnackbarStatus} />
-      <NewTodoForm todosStatus={todosStatus} noticeSnackbarStatus={noticeSnackbarStatus} />
+      <NewTodoForm noticeSnackbarStatus={noticeSnackbarStatus} />
       <TodoList todosStatus={todosStatus} noticeSnackbarStatus={noticeSnackbarStatus} />
     </>
   );
